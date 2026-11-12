@@ -27,7 +27,7 @@ AUC 0.5 is chance. R@10 is the share of test captions whose own frame is in the 
 
 ## How to run
 
-On Colab, click the badge above. Part 1 needs no GPU. On a T4, parts 1 to 4 take about 5 minutes. Part 5 (optional) trains the maps over phrases and patches.
+On Colab, click the badge above. Part 1 needs no GPU. On a T4, parts 1 to 4 take about 5 minutes. Part 5 is optional: it trains the maps over phrases and patches in about 8 more minutes. On Colab, a dialog can ask for access to your HF_TOKEN secret. The notebook does not need the token, so you can click Cancel.
 
 On your own computer:
 

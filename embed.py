@@ -8,9 +8,7 @@ MODEL_ID = "google/siglip2-base-patch16-256"
 
 
 def load_encoder(device=None):
-    """Return (model, processor). If device is None, use CUDA, then Apple MPS, then the CPU.
-    The model is public, so no Hugging Face token is sent. On Colab, this also stops the request for an HF_TOKEN secret.
-    """
+    """Return (model, processor). If device is None, use CUDA, then Apple MPS, then the CPU."""
     if device is None:
         if torch.cuda.is_available():
             device = "cuda"
@@ -18,8 +16,8 @@ def load_encoder(device=None):
             device = "mps"
         else:
             device = "cpu"
-    model = AutoModel.from_pretrained(MODEL_ID, token=False).to(device).eval()
-    processor = AutoProcessor.from_pretrained(MODEL_ID, token=False)
+    model = AutoModel.from_pretrained(MODEL_ID).to(device).eval()
+    processor = AutoProcessor.from_pretrained(MODEL_ID)
     return model, processor
 
 
