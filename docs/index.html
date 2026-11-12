@@ -272,8 +272,9 @@ def contrastive_loss(text, image, temperature=0.05):
   <div class="eyebrow">Duluth Harbor Cam · Lake Superior · LSMMA</div>
   <h2>Duluth harbor, 2012 to 2026</h2>
   <p>For 14 years, the Duluth Harbor Cam blog posted one or two sentences for each ship that came or went. An example: "Polstream Dabie arrived in Duluth this morning to load grain." Each post has a frame from a harbor camera. The posts are a ship log of the harbor. We use 5,077 posts and their frames from a public repository.</p>
-  <p>With full captions as queries, R@10 on 742 test frames goes from <b id="dl-r10"></b>. Single words gain less, and some words lose.</p>
-  <div class="caution"><p><b>Caution: names on the screen.</b> Many frames carry the ship name as text on the image. In 60 random frames, we counted 18 (about 1 in 3) with the name as an overlay. The maps can learn to read this text. Thus we test ship names apart from cargo and place words, which the overlay does not show.</p></div>
+  <p>We use full captions as queries on 742 test frames. R@10 is <b id="dl-r10"></b>. The two maps are better for full captions.</p>
+  <p>The set maps are the same two maps, trained with the set score of part 5 of the notebook. They are better for single words: <span id="dl-better"></span>.</p>
+  <div class="caution"><p><b>Caution: names on the screen.</b> Many frames carry the ship name as text on the image. In 60 random frames, we counted 18 (about 1 in 3) with the name as an overlay. The maps can learn to read this text. The set maps can match a ship name to the patch that shows it. Part of their gain on ship names can come from the overlay. Thus we test ship names apart from cargo and place words, which the overlay does not show.</p></div>
 </section>
 
 <section class="wide" id="duluth-explorer">
@@ -282,7 +283,7 @@ def contrastive_loss(text, image, temperature=0.05):
       <div class="seg" role="group" aria-label="Word" id="dl-words"></div>
     </div>
     <div class="controls">
-      <div class="seg" role="group" aria-label="Model"><button id="dl-before" aria-pressed="false">Before the maps</button><button id="dl-after" aria-pressed="true">After the maps</button></div>
+      <div class="seg" role="group" aria-label="Model"><button id="dl-before" aria-pressed="false">Before the maps</button><button id="dl-after" aria-pressed="false">Two maps</button><button id="dl-sets" aria-pressed="true">Set maps</button></div>
       <span class="score" id="dl-score"></span>
       <span class="meta" id="dl-auc"></span>
     </div>
@@ -290,8 +291,8 @@ def contrastive_loss(text, image, temperature=0.05):
     <p class="meta">The top 5 of 742 test frames. A green border shows that the post uses the word. A red border does not always show an error: a frame can show a coal ship whose post does not say "coal". AUC counts the full order of the 742 frames, and the top 5 is a small part of it. We chose the words by a rule: the 6 cargo or place words and the 4 ship names with the most test frames. Click a frame to open its post.</p>
   </div>
   <div class="panel">
-    <div class="legend"><span><span class="dot" style="background:var(--stone)"></span>Before the maps</span><span><span class="dot" style="background:var(--river)"></span>After the maps</span></div>
-    <div class="chartwrap"><svg id="duluth-chart" class="chart" role="img" aria-label="AUC of each Duluth word before and after the maps"></svg></div>
+    <div class="legend"><span><span class="dot" style="background:var(--stone)"></span>Before the maps</span><span><span class="dot" style="background:var(--river)"></span>Two maps</span><span><span class="dot" style="background:var(--salmon)"></span>Set maps</span></div>
+    <div class="chartwrap"><svg id="duluth-chart" class="chart" role="img" aria-label="AUC of each Duluth word before the maps, with the two maps and with the set maps"></svg></div>
     <p class="meta">A ship name is a label of the blog that starts a post as "&lt;name&gt; arrived" or "&lt;name&gt; departed". The chart shows the 10 ship names with the most test frames and nine cargo, place and weather words. Frames and posts: Duluth Harbor Cam / LSMMA.</p>
   </div>
 </section>
@@ -302,7 +303,7 @@ def contrastive_loss(text, image, temperature=0.05):
     <li><b>Tower radio and airport cameras.</b> One day at an airport: 123 radio transmissions, paired with camera frames by time. The model was at chance before and after the maps. The radio talks about aircraft that are a few pixels wide in the frame, or not in view.</li>
     <li><b>Chat captions.</b> On a kitten cam and an eagle nest cam, viewers chat. Their captions do not tell what the frame shows. R@50 goes only from 0.13 to 0.23 (kitten cam) and from 0.07 to 0.11 (eagle nest).</li>
     <li><b>Plain words.</b> "Sleeping" goes from 0.87 to 0.91. The model knew this word, so the maps add little.</li>
-    <li><b>Words that lose.</b> On the Duluth cam, "coal" goes from 0.56 to 0.52 and "iron ore pellets" from 0.58 to 0.47. Some ship names also lose.</li>
+    <li><b>Words that lose.</b> On the Duluth cam, the two maps lower "coal" from 0.56 to 0.52 and "iron ore pellets" from 0.58 to 0.47. Both gain with the set maps (0.68 and 0.63). "Ice" and "Indiana Harbor" do not beat the frozen model with either.</li>
     <li><b>Several bears in view.</b> A nickname picks the correct bear in 59% of the frames (chance 44%).</li>
     <li><b>Fixes with no pairs.</b> We also tried to center and whiten the embeddings, with no pairs. This gave nothing. The maps need (caption, frame) pairs.</li>
   </ul>
@@ -416,36 +417,43 @@ function dumbbell(svg, rows, caption) {
   rows.forEach((r, i) => {
     const y = y0 + i * rh + rh / 2;
     if (r.group) { s += `<text class="grp" x="10" y="${y + 4}">${esc(r.group)}</text>`; return; }
+    const values = r.sets === undefined ? [r.before, r.after] : [r.before, r.after, r.sets];
     s += `<g><text class="lbl" x="${x0 - 12}" y="${y + 4}" text-anchor="end">${esc(r.word)} (${r.n})</text>
-      <line x1="${x(r.before)}" x2="${x(r.after)}" y1="${y}" y2="${y}" stroke="var(--stone)" stroke-width="2"/>
+      <line x1="${x(Math.min(...values))}" x2="${x(Math.max(...values))}" y1="${y}" y2="${y}" stroke="var(--stone)" stroke-width="2"/>
       <circle cx="${x(r.before)}" cy="${y}" r="5.5" fill="var(--stone)"><title>${esc(r.word)}: ${r.before.toFixed(2)} before the maps</title></circle>
-      <circle cx="${x(r.after)}" cy="${y}" r="6.5" fill="var(--river)"><title>${esc(r.word)}: ${r.after.toFixed(2)} after the maps</title></circle></g>`;
+      <circle cx="${x(r.after)}" cy="${y}" r="6.5" fill="var(--river)"><title>${esc(r.word)}: ${r.after.toFixed(2)} ${r.sets === undefined ? 'after the maps' : 'with the two maps'}</title></circle>`;
+    if (r.sets !== undefined) s += `<circle cx="${x(r.sets)}" cy="${y}" r="6.5" fill="var(--salmon)"><title>${esc(r.word)}: ${r.sets.toFixed(2)} with the set maps</title></circle>`;
+    s += `</g>`;
   });
   s += `<text x="${(x0 + x1) / 2}" y="${H - 4}" text-anchor="middle">${esc(caption)}</text>`;
   svg.innerHTML = s;
 }
 dumbbell($('bear-chart'), B.chart, 'AUC on 16 new days (number of positive frames in brackets)');
-const byGain = rows => rows.slice().sort((a, b) => (b.after - b.before) - (a.after - a.before));
+const byGain = rows => rows.slice().sort((a, b) => (b.sets - b.before) - (a.sets - a.before));
 dumbbell($('duluth-chart'), [{group: 'Ship names'}, ...byGain(L.ships), {group: 'Cargo, places and ice'}, ...byGain(L.not_on_screen)], 'AUC on 742 test frames (number of test frames whose post uses the word)');
 
 // Duluth explorer
 const f2 = v => v.toFixed(2);
-$('dl-r10').textContent = `${f2(L.recall.frozen['R@10'])} to ${f2(L.recall['two maps']['R@10'])}`;
+$('dl-r10').textContent = `${f2(L.recall.frozen['R@10'])} before the maps, ${f2(L.recall['two maps']['R@10'])} with the two maps and ${f2(L.recall['set maps']['R@10'])} with the set maps`;
+const allWords = [...L.ships, ...L.not_on_screen];
+$('dl-better').textContent = `${allWords.filter(r => r.sets > r.after).length} of the ${allWords.length} words in the chart below score higher with them than with the two maps`;
 const aucOf = w => [...L.ships, ...L.not_on_screen].find(r => r.word === w);
-let dlIdx = 0, dlMode = 'after';
+let dlIdx = 0, dlMode = 'sets';
 $('dl-words').innerHTML = L.explorer.map((a, i) => `<button data-i="${i}" aria-pressed="${i === 0}">${esc(a.word)}</button>`).join('');
 function drawDuluth() {
   const a = L.explorer[dlIdx], list = a[dlMode], r = aucOf(a.word);
   $('dl-grid').innerHTML = tiles(list, {hit: 'The post uses the word', miss: 'The post does not use the word'});
   $('dl-score').textContent = `${list.filter(t => t.hit).length} of 5 correct`;
-  $('dl-auc').textContent = `${a.kind}, ${a.n} test frames · AUC ${f2(r.before)} before, ${f2(r.after)} after the maps`;
+  $('dl-auc').textContent = `${a.kind}, ${a.n} test frames · AUC ${f2(r.before)} before the maps, ${f2(r.after)} with the two maps, ${f2(r.sets)} with the set maps`;
   $('dl-before').setAttribute('aria-pressed', dlMode === 'before');
   $('dl-after').setAttribute('aria-pressed', dlMode === 'after');
+  $('dl-sets').setAttribute('aria-pressed', dlMode === 'sets');
   document.querySelectorAll('#dl-words button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.i === dlIdx));
 }
 $('dl-words').onclick = e => { const b = e.target.closest('button'); if (b) { dlIdx = +b.dataset.i; drawDuluth(); } };
 $('dl-before').onclick = () => { dlMode = 'before'; drawDuluth(); };
 $('dl-after').onclick = () => { dlMode = 'after'; drawDuluth(); };
+$('dl-sets').onclick = () => { dlMode = 'sets'; drawDuluth(); };
 drawDuluth();
 </script>
 </body>
