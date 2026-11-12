@@ -1,0 +1,5 @@
+duluth-harbor-cam-captions/
+__pycache__/
+.ipynb_checkpoints/
+bear_frames/
+my_pairs.jsonl

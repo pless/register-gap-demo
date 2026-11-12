@@ -1,0 +1,452 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>A camera's own words</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* The style of the bear cam page: a reading column, wider panels for the explorers, viewer words as mono chips. */
+:root {
+  --bg: #eef2ef; --surface: #ffffff; --ink: #16201b; --muted: #56675e; --line: #d3dcd6;
+  --river: #0b6a6e; --river-soft: #d7ecec; --stone: #8a9690; --salmon: #b2432c; --salmon-soft: #f6e1da;
+  --good: #23824d; --bad: #c0392b; --focus: #0b6a6e; --warn-soft: #fbf1dc; --warn: #8a5a00;
+  --display: "Barlow Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0e1513; --surface: #151e1b; --ink: #e4ebe7; --muted: #9db0a6; --line: #2b3934;
+  --river: #4fb6b8; --river-soft: #173233; --stone: #7d8b84; --salmon: #e2805f; --salmon-soft: #3a2420;
+  --good: #4cbf7d; --bad: #ec6a5c; --focus: #4fb6b8; --warn-soft: #33290f; --warn: #e5b45a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0e1513; --surface: #151e1b; --ink: #e4ebe7; --muted: #9db0a6; --line: #2b3934;
+  --river: #4fb6b8; --river-soft: #173233; --stone: #7d8b84; --salmon: #e2805f; --salmon-soft: #3a2420;
+  --good: #4cbf7d; --bad: #ec6a5c; --focus: #4fb6b8; --warn-soft: #33290f; --warn: #e5b45a; color-scheme: dark }
+* { box-sizing: border-box }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.55; padding-inline: 16px; padding-block: 28px 64px }
+.col, .wide { max-width: 1000px; margin-inline: auto }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; letter-spacing: .01em; text-wrap: balance; margin: 0 }
+h1 { font-size: clamp(2.6rem, 7vw, 4rem); line-height: 1 }
+h2 { font-size: 2rem; line-height: 1.05; margin-bottom: 10px }
+h3 { font-size: 1.4rem; margin-top: 8px }
+p { margin: 0 0 12px; max-width: 65ch }
+a { color: var(--river) }
+.eyebrow { font-family: var(--mono); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted) }
+.lead { font-size: 1.2rem; margin-top: 14px }
+section { margin-top: 56px; display: grid; gap: 14px }
+.part { border-top: 2px solid var(--line); padding-top: 28px }
+.chip { font-family: var(--mono); font-size: .9em; background: var(--salmon-soft); color: var(--salmon); padding: 1px 7px; border-radius: 4px; white-space: nowrap }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 22px }
+.stat { border-top: 3px solid var(--river); background: var(--surface); padding: 12px 14px }
+.stat b { display: block; font-family: var(--display); font-size: 1.9rem; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--river) }
+.stat span { font-size: .92rem; color: var(--muted) }
+.gloss { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 10px }
+.gloss div { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; min-width: 0 }
+.gloss .chip { display: inline-block; margin: 0 4px 6px 0 }
+.gloss p { font-size: .95rem; margin: 0 }
+.strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px }
+.strip figure { margin: 0 }
+.strip img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 4px; display: block }
+.strip figcaption { font-family: var(--mono); font-size: .74rem; color: var(--muted); margin-top: 4px; overflow-wrap: anywhere }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 14px; min-width: 0 }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+button { font: inherit; font-size: .95rem; cursor: pointer; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 6px; padding: 6px 12px }
+button[aria-pressed="true"] { background: var(--river); border-color: var(--river); color: var(--surface) }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px }
+button:disabled { opacity: .4; cursor: default }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; background: var(--bg) }
+.seg button { border: 0; border-radius: 0 }
+.stepper { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 18px; align-items: center }
+.stepper svg { width: 100%; height: auto; display: block }
+.steptext h3 { margin: 0 0 6px }
+.steptext .count { font-family: var(--mono); font-size: .8rem; color: var(--muted) }
+.node rect { fill: var(--bg); stroke: var(--line); stroke-width: 1.5 }
+.node text { fill: var(--muted); font-family: var(--body); font-size: 13px }
+.node.on rect { fill: var(--river-soft); stroke: var(--river); stroke-width: 2.5 }
+.node.on text { fill: var(--ink); font-weight: 600 }
+.edge { stroke: var(--line); stroke-width: 2; fill: none }
+.edge.on { stroke: var(--river) }
+pre { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: .8rem; line-height: 1.5 }
+code { font-family: var(--mono); font-size: .9em }
+.viewer { display: grid; grid-template-columns: minmax(0, 1fr) 180px; gap: 14px }
+.viewer .main img { width: 100%; border-radius: 6px; display: block; aspect-ratio: 16/9 }
+.thumbs { display: grid; gap: 8px; align-content: start }
+.thumbs button { padding: 0; overflow: hidden; display: grid; grid-template-columns: 64px 1fr; align-items: center; gap: 8px; text-align: left; background: var(--surface) }
+.thumbs button[aria-pressed="true"] { background: var(--river-soft); color: var(--ink); border-color: var(--river); box-shadow: inset 0 0 0 1px var(--river) }
+.thumbs img { width: 64px; aspect-ratio: 16/9; object-fit: cover; display: block }
+.thumbs span { font-family: var(--mono); font-size: .85rem }
+.pill { display: inline-block; font-size: .85rem; padding: 2px 9px; border-radius: 999px; font-weight: 600 }
+.pill.hit { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good) }
+.pill.miss { background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad) }
+.meta { font-size: .92rem; color: var(--muted) }
+.grid5 { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px }
+.tile { margin: 0; border: 3px solid var(--bad); border-radius: 6px; overflow: hidden; background: var(--bg); min-width: 0 }
+.tile.hit { border-color: var(--good) }
+.tile a { display: block; color: inherit; text-decoration: none }
+.tile img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block }
+.tile figcaption { font-family: var(--mono); font-size: .7rem; padding: 4px 6px; color: var(--muted); overflow-wrap: anywhere }
+.score { font-family: var(--display); font-size: 1.4rem; font-variant-numeric: tabular-nums }
+.chartwrap { overflow-x: auto }
+.chartwrap svg { width: 100%; min-width: 520px; height: auto; display: block }
+.chart text { font-family: var(--body); fill: var(--muted); font-size: 12px }
+.chart .lbl { fill: var(--ink); font-size: 13px }
+.chart .grp { fill: var(--ink); font-size: 13px; font-weight: 600 }
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: .9rem; color: var(--muted) }
+.dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; vertical-align: -1px; margin-right: 5px }
+.caution { background: var(--warn-soft); border-left: 4px solid var(--warn); border-radius: 4px; padding: 10px 14px }
+.caution p { margin: 0 }
+.caution b { color: var(--warn) }
+table { border-collapse: collapse; font-variant-numeric: tabular-nums; width: 100%; max-width: 640px }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--line) }
+th { font-weight: 600; font-size: .92rem; color: var(--muted) }
+.tablewrap { overflow-x: auto }
+.button { display: inline-block; background: var(--river); color: var(--surface); text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; justify-self: start }
+ul.limits { margin: 0; padding-left: 1.2em; display: grid; gap: 10px; max-width: 70ch }
+ol.advice { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; max-width: 70ch }
+footer { margin-top: 56px; font-size: .85rem; color: var(--muted) }
+footer p { max-width: 90ch }
+@media (max-width: 760px) {
+  .stepper, .viewer { grid-template-columns: minmax(0, 1fr) }
+  .thumbs { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+  .thumbs button { grid-template-columns: 1fr; text-align: center }
+  .thumbs img { width: 100% }
+  .strip { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  .grid5 { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+}
+@media (prefers-reduced-motion: no-preference) { .tile, .viewer .main img { transition: opacity .25s } }
+</style>
+</head>
+<body>
+
+<header class="col">
+  <div class="eyebrow">Register gap · webcam captions · SigLIP2</div>
+  <h1>A camera's own words</h1>
+  <p class="lead">Two small linear maps, trained on a few thousand (caption, frame) pairs of one camera, teach a frozen image-text model the words of that camera.</p>
+  <div class="stats">
+    <div class="stat"><b>0.38 → 0.72</b><span>AUC of the bear cam word <span class="chip">begging</span> on 16 new days (0.5 is chance).</span></div>
+    <div class="stat"><b>0.12 → 0.42</b><span>R@10 on the Duluth harbor cam, 742 test frames from 2012 to 2026.</span></div>
+    <div class="stat"><b>0.06 → 0.23</b><span>R@10 on the Roatán coral cam, 983 test frames.</span></div>
+  </div>
+</header>
+
+<section class="wide part" id="method">
+  <h2>How it works</h2>
+  <p>A frozen image-text model learned its English from the web. A camera has its own words: bear codes, ship names, the names of places. We do not change the model. We add one linear map for text and one for images, and we train only the two maps on the camera's own (caption, frame) pairs.</p>
+  <div class="panel">
+    <div class="stepper">
+      <svg viewBox="0 0 520 300" role="img" aria-label="Diagram: a caption and a frame go through a frozen encoder, then through two linear maps, into one shared space">
+        <path class="edge" data-s="2" d="M110 70 H170"/><path class="edge" data-s="2" d="M110 230 H170"/>
+        <path class="edge" data-s="3" d="M290 70 H330"/><path class="edge" data-s="3" d="M290 230 H330"/>
+        <path class="edge" data-s="4" d="M410 95 V130"/><path class="edge" data-s="4" d="M410 205 V170"/>
+        <path class="edge" data-s="5" d="M345 150 H310"/><path class="edge" data-s="6" d="M170 150 H140"/>
+        <g class="node" data-s="1"><rect x="10" y="45" width="100" height="50" rx="6"/><text x="60" y="66" text-anchor="middle">Caption</text><text x="60" y="84" text-anchor="middle">"BF 903"</text></g>
+        <g class="node" data-s="1"><rect x="10" y="205" width="100" height="50" rx="6"/><text x="60" y="226" text-anchor="middle">Frame</text><text x="60" y="244" text-anchor="middle">(snapshot)</text></g>
+        <g class="node" data-s="2"><rect x="170" y="45" width="120" height="50" rx="6"/><text x="230" y="66" text-anchor="middle">Text encoder</text><text x="230" y="84" text-anchor="middle">frozen</text></g>
+        <g class="node" data-s="2"><rect x="170" y="205" width="120" height="50" rx="6"/><text x="230" y="226" text-anchor="middle">Image encoder</text><text x="230" y="244" text-anchor="middle">frozen</text></g>
+        <g class="node" data-s="3"><rect x="330" y="45" width="160" height="50" rx="6"/><text x="410" y="66" text-anchor="middle">Text map</text><text x="410" y="84" text-anchor="middle">linear, trained</text></g>
+        <g class="node" data-s="3"><rect x="330" y="205" width="160" height="50" rx="6"/><text x="410" y="226" text-anchor="middle">Image map</text><text x="410" y="244" text-anchor="middle">linear, trained</text></g>
+        <g class="node" data-s="4"><rect x="345" y="130" width="130" height="40" rx="20"/><text x="410" y="155" text-anchor="middle">shared space</text></g>
+        <g class="node" data-s="5"><rect x="170" y="130" width="140" height="40" rx="6"/><text x="240" y="155" text-anchor="middle">words ↔ patches</text></g>
+        <g class="node" data-s="6"><rect x="10" y="130" width="130" height="40" rx="6"/><text x="75" y="155" text-anchor="middle">new days, new frames</text></g>
+      </svg>
+      <div class="steptext" aria-live="polite">
+        <div class="count" id="stepcount"></div>
+        <h3 id="steptitle"></h3>
+        <p id="stepbody"></p>
+        <div class="controls"><button id="back">Back</button><button id="next">Next</button></div>
+      </div>
+    </div>
+  </div>
+  <p>This is the full method. Each map is a residual linear layer that starts at zero, so the maps start as the frozen encoder. The maps are a small linear adapter on frozen embeddings, in the family of CLIP-Adapter. They are not a new kind of model.</p>
+<pre><code>class TwoMaps(torch.nn.Module):
+    """phi(x) = normalize(x + W x + b). W and b start at zero, so training starts at the frozen encoder."""
+
+    def __init__(self, dim):
+        super().__init__()
+        self.text_map = torch.nn.Linear(dim, dim)
+        self.image_map = torch.nn.Linear(dim, dim)
+        for layer in (self.text_map, self.image_map):
+            torch.nn.init.zeros_(layer.weight)
+            torch.nn.init.zeros_(layer.bias)
+
+    def text(self, x):
+        return torch.nn.functional.normalize(x + self.text_map(x), dim=-1)
+
+    def image(self, x):
+        return torch.nn.functional.normalize(x + self.image_map(x), dim=-1)
+
+
+def contrastive_loss(text, image, temperature=0.05):
+    """text, image: (batch, dim). Row i of text matches row i of image."""
+    logits = text @ image.T / temperature
+    target = torch.arange(len(text), device=text.device)
+    return 0.5 * (torch.nn.functional.cross_entropy(logits, target) + torch.nn.functional.cross_entropy(logits.T, target))</code></pre>
+  <p class="meta">Recipe: AdamW, learning rate 1e-4, weight decay 1e-4, batch 128, 30 epochs. After each epoch, we measure R@10 on the validation pairs and keep the best epoch. We split the pairs by day, never at random. Frames from one day look alike, so a random split puts near copies of the test frames in the training data.</p>
+</section>
+
+<section class="col part" id="words">
+  <div class="eyebrow">Brooks Falls bear cam · Katmai, Alaska · explore.org</div>
+  <h2>How viewers write</h2>
+  <p>Viewers take a snapshot of the live camera and write a short caption. They use a short form of their own: a register. The model learned its English from the web, and the web does not use these words in this way.</p>
+  <div class="gloss">
+    <div><span class="chip">BF</span><p>The camera tag: Brooks Falls.</p></div>
+    <div><span class="chip">903</span><span class="chip">806s</span><p>Bear codes from the park. "806s" is a young bear of bear 806.</p></div>
+    <div><span class="chip">Gully</span><span class="chip">Chunk</span><p>Nicknames. Gully is bear 903. Chunk is bear 32.</p></div>
+    <div><span class="chip">the office</span><span class="chip">the lip</span><span class="chip">the C</span><p>Places at the falls.</p></div>
+    <div><span class="chip">begging</span><p>A bear stays near a bear that has a fish.</p></div>
+    <div><span class="chip">high-grading</span><p>A bear eats only the best parts of a salmon.</p></div>
+    <div><span class="chip">snorkeling</span><p>A bear puts its face in the water to look for fish. The four frames below show it.</p></div>
+  </div>
+  <div class="strip" id="snorkel"></div>
+</section>
+
+<section class="wide" id="codes">
+  <div>
+    <h2>Where does a bear code point?</h2>
+    <p>Each frame below has one bear, and a viewer named that bear. We ask the model which part of the frame matches the code or the nickname. The frames are a random sample of held-out frames.</p>
+  </div>
+  <div class="panel">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Model"><button id="cb-before" aria-pressed="false">Before the maps</button><button id="cb-after" aria-pressed="true">After the maps</button></div>
+      <span id="cb-pill" class="pill"></span>
+      <span class="meta" id="cb-tally"></span>
+    </div>
+    <div class="viewer">
+      <div class="main"><img id="cb-img" alt=""><p class="meta" id="cb-meta" style="margin-top:8px"></p></div>
+      <div class="thumbs" id="cb-thumbs" role="group" aria-label="Choose a frame"></div>
+    </div>
+    <p class="meta">The heat shows how well each of the 256 patches matches the query. These images smooth the heat over 3 × 3 patches. The green circle is the hottest point, and the cyan box is the bear.</p>
+    <p class="meta">We trained these maps with a set score, which matches each word of a caption to its best patch. We also tested 355 held-out frames with one bear, and this test does not smooth the heat. The hottest patch is on the bear in 18% of these frames before the maps and in 79% after (chance 31%). Maps trained only on full frames do not point: 18% to 19%.</p>
+  </div>
+</section>
+
+<section class="wide" id="actions">
+  <div>
+    <h2>Find frames by a viewer's word</h2>
+    <p>Choose a word. The model ranks the frames of 16 days that the maps did not train on. A green border shows that a viewer used the word, or a word of the same family, for that frame.</p>
+  </div>
+  <div class="panel">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Word" id="ac-words"></div>
+      <div class="seg" role="group" aria-label="Model"><button id="ac-before" aria-pressed="false">Before the maps</button><button id="ac-after" aria-pressed="true">After the maps</button></div>
+      <span class="score" id="ac-score"></span>
+    </div>
+    <p id="ac-note" class="meta" style="margin:0"></p>
+    <div class="grid5" id="ac-grid"></div>
+  </div>
+</section>
+
+<section class="wide" id="chart">
+  <div>
+    <h2>All 13 action words</h2>
+    <p>The maps help most with words of the bear cam, such as "begging" and "sparring". Plain words, such as "sleeping", work well already. Some words lose a little, such as "playing" and "shaking". AUC 0.5 is chance.</p>
+  </div>
+  <div class="panel">
+    <div class="legend"><span><span class="dot" style="background:var(--stone)"></span>Before the maps</span><span><span class="dot" style="background:var(--river)"></span>After the maps</span></div>
+    <div class="chartwrap"><svg id="bear-chart" class="chart" role="img" aria-label="AUC of each action word before and after the maps"></svg></div>
+  </div>
+</section>
+
+<section class="col part" id="reef">
+  <div class="eyebrow">Utopia Village · Roatán, Honduras · explore.org</div>
+  <h2>Reef cams</h2>
+  <p>Two fixed underwater cameras watch a reef. Viewers caption what they see, often with the name of a fish. A live search page answers your phrase in three ways. It uses the frozen model, the two maps, and the two maps over sets of phrases and patches.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>Camera (held-out frames)</th><th>Frozen</th><th>Two maps</th><th>Two maps over sets</th></tr></thead>
+      <tbody>
+        <tr><td>Coral cam (983)</td><td>0.06 / 0.18</td><td>0.23 / 0.49</td><td>0.24 / 0.53</td></tr>
+        <tr><td>Dock cam (954)</td><td>0.05 / 0.19</td><td>0.26 / 0.59</td><td>0.29 / 0.60</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="meta">R@10 / R@50, with the caption of each held-out frame as the query. These are the models of the live page.</p>
+  <a class="button" href="https://pless.github.io/reef-cam-search/">Open the live reef search</a>
+</section>
+
+<section class="col part" id="duluth">
+  <div class="eyebrow">Duluth Harbor Cam · Lake Superior · LSMMA</div>
+  <h2>Duluth harbor, 2012 to 2026</h2>
+  <p>For 14 years, the Duluth Harbor Cam blog posted one or two sentences for each ship that came or went. An example: "Polstream Dabie arrived in Duluth this morning to load grain." Each post has a frame from a harbor camera. The posts are a ship log of the harbor. We use 5,077 posts and their frames from a public repository.</p>
+  <p>With full captions as queries, R@10 on 742 test frames goes from <b id="dl-r10"></b>. Single words gain less, and some words lose.</p>
+  <div class="caution"><p><b>Caution: names on the screen.</b> Many frames carry the ship name as text on the image. In 60 random frames, we counted 18 (about 1 in 3) with the name as an overlay. The maps can learn to read this text. Thus we test ship names apart from cargo and place words, which the overlay does not show.</p></div>
+</section>
+
+<section class="wide" id="duluth-explorer">
+  <div class="panel">
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Word" id="dl-words"></div>
+    </div>
+    <div class="controls">
+      <div class="seg" role="group" aria-label="Model"><button id="dl-before" aria-pressed="false">Before the maps</button><button id="dl-after" aria-pressed="true">After the maps</button></div>
+      <span class="score" id="dl-score"></span>
+      <span class="meta" id="dl-auc"></span>
+    </div>
+    <div class="grid5" id="dl-grid"></div>
+    <p class="meta">The top 5 of 742 test frames. A green border shows that the post uses the word. A red border does not always show an error: a frame can show a coal ship whose post does not say "coal". AUC counts the full order of the 742 frames, and the top 5 is a small part of it. We chose the words by a rule: the 6 cargo or place words and the 4 ship names with the most test frames. Click a frame to open its post.</p>
+  </div>
+  <div class="panel">
+    <div class="legend"><span><span class="dot" style="background:var(--stone)"></span>Before the maps</span><span><span class="dot" style="background:var(--river)"></span>After the maps</span></div>
+    <div class="chartwrap"><svg id="duluth-chart" class="chart" role="img" aria-label="AUC of each Duluth word before and after the maps"></svg></div>
+    <p class="meta">A ship name is a label of the blog that starts a post as "&lt;name&gt; arrived" or "&lt;name&gt; departed". The chart shows the 10 ship names with the most test frames and nine cargo, place and weather words. Frames and posts: Duluth Harbor Cam / LSMMA.</p>
+  </div>
+</section>
+
+<section class="col part" id="limits">
+  <h2>Where it does not work</h2>
+  <ul class="limits">
+    <li><b>Tower radio and airport cameras.</b> One day at an airport: 123 radio transmissions, paired with camera frames by time. The model was at chance before and after the maps. The radio talks about aircraft that are a few pixels wide in the frame, or not in view.</li>
+    <li><b>Chat captions.</b> On a kitten cam and an eagle nest cam, viewers chat. Their captions do not tell what the frame shows. R@50 goes only from 0.13 to 0.23 (kitten cam) and from 0.07 to 0.11 (eagle nest).</li>
+    <li><b>Plain words.</b> "Sleeping" goes from 0.87 to 0.91. The model knew this word, so the maps add little.</li>
+    <li><b>Words that lose.</b> On the Duluth cam, "coal" goes from 0.56 to 0.52 and "iron ore pellets" from 0.58 to 0.47. Some ship names also lose.</li>
+    <li><b>Several bears in view.</b> A nickname picks the correct bear in 59% of the frames (chance 44%).</li>
+    <li><b>Fixes with no pairs.</b> We also tried to center and whiten the embeddings, with no pairs. This gave nothing. The maps need (caption, frame) pairs.</li>
+  </ul>
+</section>
+
+<section class="col part" id="use">
+  <h2>Use it on your camera</h2>
+  <p>The code has three short files: <code>embed.py</code>, <code>maps.py</code> and <code>evaluate.py</code>. The notebook runs the bear cam and the Duluth cam from start to end, and it has one function for your own pairs.</p>
+  <ol class="advice">
+    <li>Split by time or by visit, never at random.</li>
+    <li>Start with 500 to 5,000 pairs. More pairs give more words.</li>
+    <li>Query with the words of the people who wrote the captions. The maps follow the writer, not the camera.</li>
+    <li>Plain words already work. The gain is in the words of the camera.</li>
+    <li>Look for on-screen text, such as time stamps and labels. The maps will use it.</li>
+  </ol>
+  <div class="controls">
+    <a href="https://colab.research.google.com/github/pless/register-gap-demo/blob/main/demo.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" width="117" height="20"></a>
+    <a href="https://github.com/pless/register-gap-demo">github.com/pless/register-gap-demo</a>
+  </div>
+</section>
+
+<footer class="col">
+  <p>Data: explore.org snapshots and viewer captions (Brooks Falls bear cam, 2026; Roatán reef cams, 2025 to 2026). Frames and posts of the Duluth Harbor Cam / LSMMA (2012 to 2026). Bear codes: Katmai National Park. Model: SigLIP2-base (Google) with two linear maps. We show no viewer names. To ask us to remove an item, open an issue at <a href="https://github.com/pless/register-gap-demo/issues">github.com/pless/register-gap-demo/issues</a>.</p>
+</footer>
+
+<script src="data.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const B = DATA.bear, L = DATA.duluth;
+
+// stepper
+const STEPS = [
+  ['People write captions', 'A viewer or an operator writes a caption for a frame, such as "BF 903" or "Polstream Dabie arrived in Duluth".'],
+  ['A frozen encoder reads both', 'SigLIP2 turns the caption and the frame into vectors. We do not change this encoder.'],
+  ['We add two linear maps', 'One map is for text and one map is for images. Each map starts as "no change".'],
+  ['We train only the maps', 'The goal: a caption must be nearer to its own frame than to the other frames. We use no boxes and no masks.'],
+  ['The maps also act on parts', 'To point at a part of a frame, we use the same two maps on each patch. We also use them on each word of the caption. For bear codes, we also train the maps on this match of words to patches (the set score). Maps that see only full frames do not help codes (18% → 19%).'],
+  ['We test on new days', 'The test frames come from hours or days that the maps did not see.']];
+let step = 0;
+function drawStep() {
+  $('stepcount').textContent = `Step ${step + 1} of ${STEPS.length}`;
+  $('steptitle').textContent = STEPS[step][0];
+  $('stepbody').textContent = STEPS[step][1];
+  document.querySelectorAll('#method [data-s]').forEach(el => el.classList.toggle('on', +el.dataset.s <= step + 1));
+  $('back').disabled = step === 0;
+  $('next').disabled = step === STEPS.length - 1;
+}
+$('back').onclick = () => { step = Math.max(0, step - 1); drawStep(); };
+$('next').onclick = () => { step = Math.min(STEPS.length - 1, step + 1); drawStep(); };
+drawStep();
+
+// snorkel strip
+$('snorkel').innerHTML = B.snorkel.map(s => `<figure><img src="${s.img}" alt="A bear with its face in the water" loading="lazy"><figcaption>"${esc(s.caption)}"</figcaption></figure>`).join('');
+
+// bear codes viewer
+let cbIdx = 0, cbMode = 'after';
+$('cb-thumbs').innerHTML = B.codes.map((c, i) => `<button data-i="${i}" aria-pressed="${i === 0}"><img src="${c.frame}" alt=""><span>"${esc(c.query)}"</span></button>`).join('');
+function drawCodes() {
+  const c = B.codes[cbIdx], hit = c[cbMode + '_hit'];
+  $('cb-tally').textContent = `These six frames: ${B.codes.filter(x => x[cbMode + '_hit']).length} of 6 on the bear`;
+  $('cb-img').src = c[cbMode];
+  $('cb-img').alt = `Heat map for the query ${c.query}, ${cbMode} the maps`;
+  $('cb-meta').innerHTML = `Query: <span class="chip">${esc(c.query)}</span> · Viewer caption: "${esc(c.caption)}"`;
+  const p = $('cb-pill');
+  p.className = 'pill ' + (hit ? 'hit' : 'miss');
+  p.textContent = hit ? 'Hottest point is on the bear' : 'Hottest point is not on the bear';
+  $('cb-before').setAttribute('aria-pressed', cbMode === 'before');
+  $('cb-after').setAttribute('aria-pressed', cbMode === 'after');
+  document.querySelectorAll('#cb-thumbs button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.i === cbIdx));
+}
+$('cb-thumbs').onclick = e => { const b = e.target.closest('button'); if (b) { cbIdx = +b.dataset.i; drawCodes(); } };
+$('cb-before').onclick = () => { cbMode = 'before'; drawCodes(); };
+$('cb-after').onclick = () => { cbMode = 'after'; drawCodes(); };
+drawCodes();
+
+// shared: a grid of five tiles with green or red borders
+function tiles(list, alt) {
+  return list.map(t => `<figure class="tile ${t.hit ? 'hit' : ''}"><a href="${esc(t.url)}" target="_blank" rel="noopener"><img src="${t.img}" alt="${t.hit ? alt.hit : alt.miss}" loading="lazy"></a><figcaption>${t.date ? esc(t.date) + ' · ' : ''}"${esc(t.caption)}"</figcaption></figure>`).join('');
+}
+
+// bear action explorer
+const NOTES = {
+  begging: 'One red frame says "Could you spare a few bites please". That is also begging.',
+  fishing: 'Viewers often used other words for a bear that fishes, such as "caught" or "chasing fish". Thus, a red border does not always show an error.',
+  sleeping: '"Sleeping" is a plain word, and the frozen model knows it. It finds bears that sleep, before and after the maps.'};
+let acIdx = 0, acMode = 'after';
+$('ac-words').innerHTML = B.actions.map((a, i) => `<button data-i="${i}" aria-pressed="${i === 0}">${esc(a.word)}</button>`).join('');
+function drawActions() {
+  const a = B.actions[acIdx], list = a[acMode];
+  $('ac-grid').innerHTML = tiles(list, {hit: 'A viewer used the word for this frame', miss: 'No viewer used the word for this frame'});
+  $('ac-score').textContent = `${list.filter(t => t.hit).length} of 5 correct`;
+  $('ac-note').textContent = acMode === 'after' ? (NOTES[a.word] || '') : '';
+  $('ac-before').setAttribute('aria-pressed', acMode === 'before');
+  $('ac-after').setAttribute('aria-pressed', acMode === 'after');
+  document.querySelectorAll('#ac-words button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.i === acIdx));
+}
+$('ac-words').onclick = e => { const b = e.target.closest('button'); if (b) { acIdx = +b.dataset.i; drawActions(); } };
+$('ac-before').onclick = () => { acMode = 'before'; drawActions(); };
+$('ac-after').onclick = () => { acMode = 'after'; drawActions(); };
+drawActions();
+
+// dumbbell chart: rows of {word, n, before, after}; a row with only {group} is a heading
+function dumbbell(svg, rows, caption) {
+  const x0 = 190, x1 = 690, y0 = 30, rh = 28, lo = 0.3, hi = 1.0, H = y0 + rows.length * rh + 40;
+  const x = v => x0 + (v - lo) / (hi - lo) * (x1 - x0);
+  svg.setAttribute('viewBox', `0 0 720 ${H}`);
+  let s = '';
+  for (let t = 0.3; t <= 1.001; t += 0.1) s += `<line x1="${x(t)}" x2="${x(t)}" y1="${y0 - 8}" y2="${y0 + rows.length * rh}" stroke="var(--line)"/><text x="${x(t)}" y="${y0 + rows.length * rh + 18}" text-anchor="middle">${t.toFixed(1)}</text>`;
+  s += `<line x1="${x(0.5)}" x2="${x(0.5)}" y1="${y0 - 8}" y2="${y0 + rows.length * rh}" stroke="var(--muted)" stroke-dasharray="4 3"/><text x="${x(0.5) + 4}" y="${y0 - 12}">chance</text>`;
+  rows.forEach((r, i) => {
+    const y = y0 + i * rh + rh / 2;
+    if (r.group) { s += `<text class="grp" x="10" y="${y + 4}">${esc(r.group)}</text>`; return; }
+    s += `<g><text class="lbl" x="${x0 - 12}" y="${y + 4}" text-anchor="end">${esc(r.word)} (${r.n})</text>
+      <line x1="${x(r.before)}" x2="${x(r.after)}" y1="${y}" y2="${y}" stroke="var(--stone)" stroke-width="2"/>
+      <circle cx="${x(r.before)}" cy="${y}" r="5.5" fill="var(--stone)"><title>${esc(r.word)}: ${r.before.toFixed(2)} before the maps</title></circle>
+      <circle cx="${x(r.after)}" cy="${y}" r="6.5" fill="var(--river)"><title>${esc(r.word)}: ${r.after.toFixed(2)} after the maps</title></circle></g>`;
+  });
+  s += `<text x="${(x0 + x1) / 2}" y="${H - 4}" text-anchor="middle">${esc(caption)}</text>`;
+  svg.innerHTML = s;
+}
+dumbbell($('bear-chart'), B.chart, 'AUC on 16 new days (number of positive frames in brackets)');
+const byGain = rows => rows.slice().sort((a, b) => (b.after - b.before) - (a.after - a.before));
+dumbbell($('duluth-chart'), [{group: 'Ship names'}, ...byGain(L.ships), {group: 'Cargo, places and ice'}, ...byGain(L.not_on_screen)], 'AUC on 742 test frames (number of test frames whose post uses the word)');
+
+// Duluth explorer
+const f2 = v => v.toFixed(2);
+$('dl-r10').textContent = `${f2(L.recall.frozen['R@10'])} to ${f2(L.recall['two maps']['R@10'])}`;
+const aucOf = w => [...L.ships, ...L.not_on_screen].find(r => r.word === w);
+let dlIdx = 0, dlMode = 'after';
+$('dl-words').innerHTML = L.explorer.map((a, i) => `<button data-i="${i}" aria-pressed="${i === 0}">${esc(a.word)}</button>`).join('');
+function drawDuluth() {
+  const a = L.explorer[dlIdx], list = a[dlMode], r = aucOf(a.word);
+  $('dl-grid').innerHTML = tiles(list, {hit: 'The post uses the word', miss: 'The post does not use the word'});
+  $('dl-score').textContent = `${list.filter(t => t.hit).length} of 5 correct`;
+  $('dl-auc').textContent = `${a.kind}, ${a.n} test frames · AUC ${f2(r.before)} before, ${f2(r.after)} after the maps`;
+  $('dl-before').setAttribute('aria-pressed', dlMode === 'before');
+  $('dl-after').setAttribute('aria-pressed', dlMode === 'after');
+  document.querySelectorAll('#dl-words button').forEach(b => b.setAttribute('aria-pressed', +b.dataset.i === dlIdx));
+}
+$('dl-words').onclick = e => { const b = e.target.closest('button'); if (b) { dlIdx = +b.dataset.i; drawDuluth(); } };
+$('dl-before').onclick = () => { dlMode = 'before'; drawDuluth(); };
+$('dl-after').onclick = () => { dlMode = 'after'; drawDuluth(); };
+drawDuluth();
+</script>
+</body>
+</html>
