@@ -27,7 +27,7 @@ AUC 0.5 is chance. R@10 is the share of test captions whose own frame is in the 
 
 ## How to run
 
-On Colab, click the badge above. Part 1 needs no GPU.
+On Colab, click the badge above. Part 1 needs no GPU. On a T4, parts 1 to 4 take about 5 minutes. Part 5 (optional) trains the maps over phrases and patches.
 
 On your own computer:
 
@@ -63,7 +63,8 @@ Part 4 of the notebook has one function, `run(pairs_jsonl)`, for a JSON-lines fi
 | `embed.py` | The frozen encoder: text, image and per-patch embeddings. |
 | `maps.py` | The two maps, the loss and the training loop. |
 | `evaluate.py` | Ranks, recall, word AUC and heat maps. |
-| `demo.ipynb` | Four parts: the bear cam, Duluth from raw frames, where a word points, and your own camera. |
+| `sets.py` | The maps over phrases and patches (the set score) and their training loop. |
+| `demo.ipynb` | Five parts: the bear cam, Duluth from raw frames, where a word points, your own camera, and the set score (optional). |
 | `data/` | Bear cam embeddings and captions (no viewer names), 13 query words, 12 frames for the heat maps, and the set-score maps. |
 | `docs/` | The demo page. |
 
@@ -74,7 +75,30 @@ Part 4 of the notebook has one function, `run(pairs_jsonl)`, for a JSON-lines fi
 - Plain words: "sleeping" goes from 0.87 to 0.91. The model knew this word.
 - Some words lose: on the Duluth cam, "coal" goes from 0.56 to 0.52 and "iron ore pellets" from 0.58 to 0.47.
 - On-screen text: about 1 in 3 Duluth frames carries the ship name as an overlay. The maps can learn to read it.
-- Maps trained on full frames do not point at the part of the frame that a word names. The maps in `data/bear_set_maps.npz` do, but the code for their set score is not in this repository.
+- Maps trained on full frames do not point at the part of the frame that a word names. Maps trained with the set score (`sets.py`) do.
+
+## Maps over phrases and patches (`sets.py`)
+
+The same two maps can also act on parts. The text map acts on each phrase of a caption, and the image map acts on each patch of a frame. The set score adds, for each phrase, its best match among the 256 patches:
+
+```
+score(caption, frame) = <T(caption), I(frame)> + lam * mean over the phrases p of softmax_j <T(p), I(patch_j)>
+softmax_j s_j = tau * logsumexp_j(s_j / tau) - tau * log(J)
+```
+
+The training learns `lam` and `tau`. They start at 1 and 0.05. The rest of the recipe is the same as for the two maps, and R@10 on all validation pairs chooses the epoch. `sets.py` does not make the phrases. Part 5 of the notebook makes them with the noun chunks of spaCy.
+
+Maps trained with the set score point at the part of a frame that a word names. On 355 held-out bear cam frames with one bear, the hottest patch for the bear code is on the bear in 79% of the frames. It is 18% for the frozen model and 19% for maps trained on full frames (chance 31%).
+
+For full captions, the set score helps a little on the reef cams and loses on Duluth. The table gives R@10 / R@50 on the test frames:
+
+| Camera | Two maps | Set maps |
+|---|---|---|
+| Roatán coral cam | 0.23 / 0.51 | 0.25 / 0.53 |
+| Roatán dock cam | 0.26 / 0.59 | 0.27 / 0.60 |
+| Duluth harbor cam | 0.43 / 0.75 | 0.40 / 0.71 |
+
+On a laptop with Apple MPS, the set maps train in 2 to 4 minutes for about 4,000 pairs.
 
 ## Data
 

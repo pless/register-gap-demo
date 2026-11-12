@@ -34,9 +34,10 @@ def contrastive_loss(text, image, temperature=0.05):
 @torch.no_grad()
 def apply_maps(maps, text, image):
     """text: (..., dim), image: (..., dim) float arrays. Returns the two mapped arrays (numpy float32, unit length)."""
-    text = torch.tensor(text, dtype=torch.float32)
-    image = torch.tensor(image, dtype=torch.float32)
-    return maps.text(text).numpy(), maps.image(image).numpy()
+    device = maps.text_map.weight.device
+    text = torch.tensor(text, dtype=torch.float32, device=device)
+    image = torch.tensor(image, dtype=torch.float32, device=device)
+    return maps.text(text).cpu().numpy(), maps.image(image).cpu().numpy()
 
 
 def train_maps(text_train, image_train, text_val, image_val):

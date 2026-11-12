@@ -3,19 +3,23 @@ import numpy as np
 from scipy.stats import rankdata
 
 
-def ranks(text, image):
-    """text, image: (n, 768) unit length. Row i of text is the caption of frame i.
-    Returns (n,) int: the rank of the true frame for each caption among all n frames. 1 is the best.
+def ranks(scores):
+    """scores: (n, n), row i is caption i and column j is frame j, for example text @ image.T.
+    Returns (n,) int: the rank of frame i for caption i among all n frames. 1 is the best.
     A tie counts against the true frame.
     """
-    scores = text @ image.T
     true_scores = np.diag(scores)
     return (scores >= true_scores[:, None]).sum(axis=1)
 
 
 def recall(text, image):
     """text, image: (n, 768), row i of each is one pair. Returns R@1, R@10, R@50 and the median rank."""
-    r = ranks(text, image)
+    return recall_of_scores(text @ image.T)
+
+
+def recall_of_scores(scores):
+    """scores: (n, n), as for ranks. Returns R@1, R@10, R@50 and the median rank."""
+    r = ranks(scores)
     return {
         "R@1": float(np.mean(r <= 1)),
         "R@10": float(np.mean(r <= 10)),
@@ -28,9 +32,13 @@ def word_auc(words, frames, labels):
     """words: (w, 768). frames: (n, 768). labels: (w, n) bool, True if a caption of frame j contains word i.
     Returns (w,) float: for each word, the chance that a positive frame scores above a negative frame (rank AUC).
     """
-    scores = words @ frames.T
-    auc = np.zeros(len(words))
-    for i in range(len(words)):
+    return auc_of_scores(words @ frames.T, labels)
+
+
+def auc_of_scores(scores, labels):
+    """scores, labels: (w, n), the score and the label of frame j for word i. Returns (w,) float, as for word_auc."""
+    auc = np.zeros(len(scores))
+    for i in range(len(scores)):
         r = rankdata(scores[i])
         positive = labels[i]
         n_pos = positive.sum()
